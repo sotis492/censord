@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ローカル保存対応のスライドショー</title>
+    <title>ランダム切り替え間隔のスライドショー</title>
     <style>
         #slideshow {
             width: 500px;
@@ -27,15 +27,10 @@
         button {
             margin: 5px;
         }
-
-        #shareLink {
-            display: block;
-            margin: 10px 0;
-        }
     </style>
 </head>
 <body>
-    <h1>ローカル保存対応の画像と動画スライドショー</h1>
+    <h1>ランダム切り替え間隔の画像と動画スライドショー</h1>
     <input type="file" id="mediaUpload" multiple accept="image/*,video/*">
     <div id="slideshow">
         <img id="slideImage" src="" alt="スライド">
@@ -45,11 +40,12 @@
     <button id="playPauseBtn">再生</button>
     <button id="nextBtn">次へ</button>
     <button id="fullscreenBtn">全画面</button>
+    <button id="resetBtn">リセット</button>
 
     <script>
         let mediaFiles = [];
         let currentIndex = 0;
-        let interval;
+        let timeout;
         let playing = false;
 
         // ページ読み込み時にローカル保存からデータを復元
@@ -82,7 +78,7 @@
 
         document.getElementById('playPauseBtn').addEventListener('click', () => {
             if (playing) {
-                clearInterval(interval);
+                clearTimeout(timeout);
                 document.getElementById('playPauseBtn').innerText = '再生';
                 pauseCurrentMedia();
             } else {
@@ -95,6 +91,7 @@
         document.getElementById('nextBtn').addEventListener('click', nextSlide);
         document.getElementById('prevBtn').addEventListener('click', prevSlide);
         document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+        document.getElementById('resetBtn').addEventListener('click', resetMediaFiles);
 
         function showMedia(index) {
             const slideImage = document.getElementById('slideImage');
@@ -105,7 +102,7 @@
             if (mediaFiles[index].type === 'image') {
                 slideImage.src = mediaFiles[index].url;
                 slideImage.style.display = 'block';
-                interval = setInterval(nextSlide, 10000); // 画像は10秒で切り替え
+                scheduleNextSlide(); // ランダムな時間で次のスライドを設定
             } else {
                 slideVideo.src = mediaFiles[index].url;
                 slideVideo.style.display = 'block';
@@ -142,12 +139,26 @@
             if (currentFile.type === 'video') {
                 document.getElementById('slideVideo').pause();
             }
-            clearInterval(interval);
+            clearTimeout(timeout);
         }
 
         // ローカルストレージに保存
         function saveToLocalStorage() {
             localStorage.setItem('mediaFiles', JSON.stringify(mediaFiles));
+        }
+
+        // ローカルストレージをリセットする関数
+        function resetMediaFiles() {
+            localStorage.removeItem('mediaFiles');
+            mediaFiles = [];
+            currentIndex = 0;
+            clearTimeout(timeout);
+            pauseCurrentMedia();
+
+            // 画像と動画を非表示にする
+            document.getElementById('slideImage').style.display = 'none';
+            document.getElementById('slideVideo').style.display = 'none';
+            alert("メディアファイルがリセットされました。");
         }
 
         function toggleFullscreen() {
@@ -163,6 +174,12 @@
             } else if (currentMedia.msRequestFullscreen) {
                 currentMedia.msRequestFullscreen();
             }
+        }
+
+        // ランダムな切り替え時間を設定する
+        function scheduleNextSlide() {
+            const randomInterval = Math.floor(Math.random() * (15000 - 2000 + 1)) + 2000; // 2秒〜15秒
+            timeout = setTimeout(nextSlide, randomInterval);
         }
     </script>
 </body>
