@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>見切れないスライドショー</title>
+    <title>ファイル保持対応のスライドショー</title>
     <style>
         #slideshow {
             width: 500px;
@@ -12,139 +12,8 @@
             margin: 20px auto;
             border: 2px solid #333;
             position: relative;
-            background-color: #000; /* 背景色を追加して未使用部分を黒に */
+            background-color: #000;
         }
 
         #slideImage, #slideVideo {
             width: 100%;
-            height: 100%;
-            object-fit: contain; /* 画像・動画のサイズを維持して表示 */
-            object-position: center; /* 画像・動画を中央に配置 */
-            display: none;
-            background-color: #000; /* 背景色を追加して黒に */
-        }
-
-        button {
-            margin: 5px;
-        }
-    </style>
-</head>
-<body>
-    <h1>見切れない画像と動画スライドショー</h1>
-    <input type="file" id="mediaUpload" multiple accept="image/*,video/*">
-    <div id="slideshow">
-        <img id="slideImage" src="" alt="スライド">
-        <video id="slideVideo" controls></video>
-    </div>
-    <button id="prevBtn">前へ</button>
-    <button id="playPauseBtn">再生</button>
-    <button id="nextBtn">次へ</button>
-    <button id="fullscreenBtn">全画面</button>
-
-    <script>
-        let mediaFiles = [];
-        let currentIndex = 0;
-        let interval;
-        let playing = false;
-
-        document.getElementById('mediaUpload').addEventListener('change', (event) => {
-            const newFiles = Array.from(event.target.files).map(file => ({
-                url: URL.createObjectURL(file),
-                type: file.type.startsWith('image') ? 'image' : 'video'
-            }));
-            mediaFiles = mediaFiles.concat(newFiles);
-            shuffleMediaFiles();
-            if (mediaFiles.length > 0 && !playing) {
-                showMedia(currentIndex);
-            }
-        });
-
-        document.getElementById('playPauseBtn').addEventListener('click', () => {
-            if (playing) {
-                clearInterval(interval);
-                document.getElementById('playPauseBtn').innerText = '再生';
-                pauseCurrentMedia();
-            } else {
-                playCurrentMedia();
-                document.getElementById('playPauseBtn').innerText = '一時停止';
-            }
-            playing = !playing;
-        });
-
-        document.getElementById('nextBtn').addEventListener('click', nextSlide);
-        document.getElementById('prevBtn').addEventListener('click', prevSlide);
-        document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
-
-        function showMedia(index) {
-            const slideImage = document.getElementById('slideImage');
-            const slideVideo = document.getElementById('slideVideo');
-            slideImage.style.display = 'none';
-            slideVideo.style.display = 'none';
-
-            if (mediaFiles[index].type === 'image') {
-                slideImage.src = mediaFiles[index].url;
-                slideImage.style.display = 'block';
-                interval = setInterval(nextSlide, 10000); // 画像は10秒で切り替え
-            } else {
-                slideVideo.src = mediaFiles[index].url;
-                slideVideo.style.display = 'block';
-                slideVideo.load();
-                slideVideo.addEventListener('ended', nextSlide);
-            }
-        }
-
-        function nextSlide() {
-            if (mediaFiles.length === 0) return;
-            pauseCurrentMedia();
-            currentIndex = (currentIndex + 1) % mediaFiles.length;
-            showMedia(currentIndex);
-            playCurrentMedia();
-        }
-
-        function prevSlide() {
-            if (mediaFiles.length === 0) return;
-            pauseCurrentMedia();
-            currentIndex = (currentIndex - 1 + mediaFiles.length) % mediaFiles.length;
-            showMedia(currentIndex);
-            playCurrentMedia();
-        }
-
-        function playCurrentMedia() {
-            const currentFile = mediaFiles[currentIndex];
-            if (currentFile.type === 'video') {
-                document.getElementById('slideVideo').play();
-            }
-        }
-
-        function pauseCurrentMedia() {
-            const currentFile = mediaFiles[currentIndex];
-            if (currentFile.type === 'video') {
-                document.getElementById('slideVideo').pause();
-            }
-            clearInterval(interval);
-        }
-
-        function shuffleMediaFiles() {
-            for (let i = mediaFiles.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [mediaFiles[i], mediaFiles[j]] = [mediaFiles[j], mediaFiles[i]];
-            }
-        }
-
-        function toggleFullscreen() {
-            const slideImage = document.getElementById('slideImage');
-            const slideVideo = document.getElementById('slideVideo');
-
-            const currentMedia = mediaFiles[currentIndex].type === 'image' ? slideImage : slideVideo;
-
-            if (currentMedia.requestFullscreen) {
-                currentMedia.requestFullscreen();
-            } else if (currentMedia.webkitRequestFullscreen) {
-                currentMedia.webkitRequestFullscreen();
-            } else if (currentMedia.msRequestFullscreen) {
-                currentMedia.msRequestFullscreen();
-            }
-        }
-    </script>
-</body>
-</html>
