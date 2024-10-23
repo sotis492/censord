@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>画像と動画のスライドショー</title>
+    <title>見切れないスライドショー</title>
     <style>
         #slideshow {
             width: 500px;
@@ -12,13 +12,16 @@
             margin: 20px auto;
             border: 2px solid #333;
             position: relative;
+            background-color: #000; /* 背景色を追加して未使用部分を黒に */
         }
 
         #slideImage, #slideVideo {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain; /* 画像・動画のサイズを維持して表示 */
+            object-position: center; /* 画像・動画を中央に配置 */
             display: none;
+            background-color: #000; /* 背景色を追加して黒に */
         }
 
         button {
@@ -27,7 +30,7 @@
     </style>
 </head>
 <body>
-    <h1>ランダム再生の画像と動画スライドショー</h1>
+    <h1>見切れない画像と動画スライドショー</h1>
     <input type="file" id="mediaUpload" multiple accept="image/*,video/*">
     <div id="slideshow">
         <img id="slideImage" src="" alt="スライド">
@@ -36,6 +39,7 @@
     <button id="prevBtn">前へ</button>
     <button id="playPauseBtn">再生</button>
     <button id="nextBtn">次へ</button>
+    <button id="fullscreenBtn">全画面</button>
 
     <script>
         let mediaFiles = [];
@@ -44,13 +48,15 @@
         let playing = false;
 
         document.getElementById('mediaUpload').addEventListener('change', (event) => {
-            mediaFiles = Array.from(event.target.files).map(file => ({
+            const newFiles = Array.from(event.target.files).map(file => ({
                 url: URL.createObjectURL(file),
                 type: file.type.startsWith('image') ? 'image' : 'video'
             }));
-            shuffleMediaFiles(); // ファイルをシャッフル
-            currentIndex = 0;
-            showMedia(currentIndex);
+            mediaFiles = mediaFiles.concat(newFiles);
+            shuffleMediaFiles();
+            if (mediaFiles.length > 0 && !playing) {
+                showMedia(currentIndex);
+            }
         });
 
         document.getElementById('playPauseBtn').addEventListener('click', () => {
@@ -67,6 +73,7 @@
 
         document.getElementById('nextBtn').addEventListener('click', nextSlide);
         document.getElementById('prevBtn').addEventListener('click', prevSlide);
+        document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
 
         function showMedia(index) {
             const slideImage = document.getElementById('slideImage');
@@ -81,8 +88,8 @@
             } else {
                 slideVideo.src = mediaFiles[index].url;
                 slideVideo.style.display = 'block';
-                slideVideo.load(); // 再生の準備
-                slideVideo.addEventListener('ended', nextSlide); // 動画終了時に次へ
+                slideVideo.load();
+                slideVideo.addEventListener('ended', nextSlide);
             }
         }
 
@@ -114,14 +121,28 @@
             if (currentFile.type === 'video') {
                 document.getElementById('slideVideo').pause();
             }
-            clearInterval(interval); // 画像の場合も停止
+            clearInterval(interval);
         }
 
-        // 配列をシャッフルする関数
         function shuffleMediaFiles() {
             for (let i = mediaFiles.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [mediaFiles[i], mediaFiles[j]] = [mediaFiles[j], mediaFiles[i]];
+            }
+        }
+
+        function toggleFullscreen() {
+            const slideImage = document.getElementById('slideImage');
+            const slideVideo = document.getElementById('slideVideo');
+
+            const currentMedia = mediaFiles[currentIndex].type === 'image' ? slideImage : slideVideo;
+
+            if (currentMedia.requestFullscreen) {
+                currentMedia.requestFullscreen();
+            } else if (currentMedia.webkitRequestFullscreen) {
+                currentMedia.webkitRequestFullscreen();
+            } else if (currentMedia.msRequestFullscreen) {
+                currentMedia.msRequestFullscreen();
             }
         }
     </script>
