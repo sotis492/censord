@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ファイル保持対応のスライドショー</title>
+    <title>ローカル保存対応のスライドショー</title>
     <style>
         #slideshow {
             width: 500px;
@@ -17,3 +17,153 @@
 
         #slideImage, #slideVideo {
             width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: none;
+            background-color: #000;
+        }
+
+        button {
+            margin: 5px;
+        }
+
+        #shareLink {
+            display: block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>ローカル保存対応の画像と動画スライドショー</h1>
+    <input type="file" id="mediaUpload" multiple accept="image/*,video/*">
+    <div id="slideshow">
+        <img id="slideImage" src="" alt="スライド">
+        <video id="slideVideo" controls></video>
+    </div>
+    <button id="prevBtn">前へ</button>
+    <button id="playPauseBtn">再生</button>
+    <button id="nextBtn">次へ</button>
+    <button id="fullscreenBtn">全画面</button>
+
+    <script>
+        let mediaFiles = [];
+        let currentIndex = 0;
+        let interval;
+        let playing = false;
+
+        // ページ読み込み時にローカル保存からデータを復元
+        window.onload = () => {
+            const savedMedia = JSON.parse(localStorage.getItem('mediaFiles'));
+            if (savedMedia && savedMedia.length > 0) {
+                mediaFiles = savedMedia.map(file => ({
+                    url: file.url,
+                    type: file.type
+                }));
+                currentIndex = 0;
+                showMedia(currentIndex);
+            }
+        };
+
+        document.getElementById('mediaUpload').addEventListener('change', (event) => {
+            const newFiles = Array.from(event.target.files).map(file => ({
+                url: URL.createObjectURL(file),
+                type: file.type.startsWith('image') ? 'image' : 'video'
+            }));
+
+            // 既存のファイルリストに新しいファイルを追加
+            mediaFiles = mediaFiles.concat(newFiles);
+            saveToLocalStorage(); // ローカルに保存
+
+            if (mediaFiles.length > 0 && !playing) {
+                showMedia(currentIndex);
+            }
+        });
+
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            if (playing) {
+                clearInterval(interval);
+                document.getElementById('playPauseBtn').innerText = '再生';
+                pauseCurrentMedia();
+            } else {
+                playCurrentMedia();
+                document.getElementById('playPauseBtn').innerText = '一時停止';
+            }
+            playing = !playing;
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', nextSlide);
+        document.getElementById('prevBtn').addEventListener('click', prevSlide);
+        document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+
+        function showMedia(index) {
+            const slideImage = document.getElementById('slideImage');
+            const slideVideo = document.getElementById('slideVideo');
+            slideImage.style.display = 'none';
+            slideVideo.style.display = 'none';
+
+            if (mediaFiles[index].type === 'image') {
+                slideImage.src = mediaFiles[index].url;
+                slideImage.style.display = 'block';
+                interval = setInterval(nextSlide, 10000); // 画像は10秒で切り替え
+            } else {
+                slideVideo.src = mediaFiles[index].url;
+                slideVideo.style.display = 'block';
+                slideVideo.load();
+                slideVideo.addEventListener('ended', nextSlide);
+            }
+        }
+
+        function nextSlide() {
+            if (mediaFiles.length === 0) return;
+            pauseCurrentMedia();
+            currentIndex = (currentIndex + 1) % mediaFiles.length;
+            showMedia(currentIndex);
+            playCurrentMedia();
+        }
+
+        function prevSlide() {
+            if (mediaFiles.length === 0) return;
+            pauseCurrentMedia();
+            currentIndex = (currentIndex - 1 + mediaFiles.length) % mediaFiles.length;
+            showMedia(currentIndex);
+            playCurrentMedia();
+        }
+
+        function playCurrentMedia() {
+            const currentFile = mediaFiles[currentIndex];
+            if (currentFile.type === 'video') {
+                document.getElementById('slideVideo').play();
+            }
+        }
+
+        function pauseCurrentMedia() {
+            const currentFile = mediaFiles[currentIndex];
+            if (currentFile.type === 'video') {
+                document.getElementById('slideVideo').pause();
+            }
+            clearInterval(interval);
+        }
+
+        // ローカルストレージに保存
+        function saveToLocalStorage() {
+            localStorage.setItem('mediaFiles', JSON.stringify(mediaFiles));
+        }
+
+        function toggleFullscreen() {
+            const slideImage = document.getElementById('slideImage');
+            const slideVideo = document.getElementById('slideVideo');
+
+            const currentMedia = mediaFiles[currentIndex].type === 'image' ? slideImage : slideVideo;
+
+            if (currentMedia.requestFullscreen) {
+                currentMedia.requestFullscreen();
+            } else if (currentMedia.webkitRequestFullscreen) {
+                currentMedia.webkitRequestFullscreen();
+            } else if (currentMedia.msRequestFullscreen) {
+                currentMedia.msRequestFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
