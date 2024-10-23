@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIF対応のスライドショー</title>
+    <title>ランダム切り替えのスライドショー</title>
     <style>
         #slideshow {
             width: 500px;
@@ -30,7 +30,7 @@
     </style>
 </head>
 <body>
-    <h1>GIF対応の画像と動画スライドショー</h1>
+    <h1>ランダム切り替えの画像と動画スライドショー</h1>
     <input type="file" id="mediaUpload" multiple accept="image/*,video/*">
     <div id="slideshow">
         <img id="slideImage" src="" alt="スライド">
@@ -108,13 +108,14 @@
                 slideVideo.loop = false; // GIFを動画のように一度だけ再生
                 slideVideo.style.display = 'block';
                 slideVideo.load();
-                slideVideo.addEventListener('ended', nextSlide); // 再生が終わったら次へ
                 slideVideo.play();
+                scheduleNextSlide(); // ランダムな時間で次のスライドを設定
             } else {
                 slideVideo.src = mediaFiles[index].url;
                 slideVideo.style.display = 'block';
                 slideVideo.load();
-                slideVideo.addEventListener('ended', nextSlide);
+                slideVideo.play();
+                scheduleNextSlide(); // ランダムな時間で次のスライドを設定
             }
         }
 
