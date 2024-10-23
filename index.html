@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>リセット対応のスライドショー</title>
+    <title>GIF対応のスライドショー</title>
     <style>
         #slideshow {
             width: 500px;
@@ -30,7 +30,7 @@
     </style>
 </head>
 <body>
-    <h1>リセット対応の画像と動画スライドショー</h1>
+    <h1>GIF対応の画像と動画スライドショー</h1>
     <input type="file" id="mediaUpload" multiple accept="image/*,video/*">
     <div id="slideshow">
         <img id="slideImage" src="" alt="スライド">
@@ -64,7 +64,7 @@
         document.getElementById('mediaUpload').addEventListener('change', (event) => {
             const newFiles = Array.from(event.target.files).map(file => ({
                 url: URL.createObjectURL(file),
-                type: file.type.startsWith('image') ? 'image' : 'video'
+                type: file.type.startsWith('image') ? (file.type === 'image/gif' ? 'gif' : 'image') : 'video'
             }));
 
             // 既存のファイルリストに新しいファイルを追加
@@ -103,6 +103,13 @@
                 slideImage.src = mediaFiles[index].url;
                 slideImage.style.display = 'block';
                 scheduleNextSlide(); // ランダムな時間で次のスライドを設定
+            } else if (mediaFiles[index].type === 'gif') {
+                slideVideo.src = mediaFiles[index].url;
+                slideVideo.loop = false; // GIFを動画のように一度だけ再生
+                slideVideo.style.display = 'block';
+                slideVideo.load();
+                slideVideo.addEventListener('ended', nextSlide); // 再生が終わったら次へ
+                slideVideo.play();
             } else {
                 slideVideo.src = mediaFiles[index].url;
                 slideVideo.style.display = 'block';
@@ -129,14 +136,14 @@
 
         function playCurrentMedia() {
             const currentFile = mediaFiles[currentIndex];
-            if (currentFile.type === 'video') {
+            if (currentFile.type === 'video' || currentFile.type === 'gif') {
                 document.getElementById('slideVideo').play();
             }
         }
 
         function pauseCurrentMedia() {
             const currentFile = mediaFiles[currentIndex];
-            if (currentFile.type === 'video') {
+            if (currentFile.type === 'video' || currentFile.type === 'gif') {
                 document.getElementById('slideVideo').pause();
             }
             clearTimeout(timeout);
