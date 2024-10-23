@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ランダム切り替えのスライドショー</title>
+    <title>全画面対応のスライドショー</title>
     <style>
         #slideshow {
             width: 500px;
@@ -30,7 +30,7 @@
     </style>
 </head>
 <body>
-    <h1>ランダム切り替えの画像と動画スライドショー</h1>
+    <h1>全画面対応の画像と動画スライドショー</h1>
     <input type="file" id="mediaUpload" multiple accept="image/*,video/*">
     <div id="slideshow">
         <img id="slideImage" src="" alt="スライド">
@@ -177,11 +177,22 @@
             const currentMedia = mediaFiles[currentIndex].type === 'image' ? slideImage : slideVideo;
 
             if (currentMedia.requestFullscreen) {
-                currentMedia.requestFullscreen();
+                currentMedia.requestFullscreen().then(() => {
+                    // 全画面に切り替わった後に動画を再生する
+                    if (currentMedia.tagName === 'VIDEO') {
+                        currentMedia.play();
+                    }
+                });
             } else if (currentMedia.webkitRequestFullscreen) {
                 currentMedia.webkitRequestFullscreen();
+                if (currentMedia.tagName === 'VIDEO') {
+                    currentMedia.play();
+                }
             } else if (currentMedia.msRequestFullscreen) {
                 currentMedia.msRequestFullscreen();
+                if (currentMedia.tagName === 'VIDEO') {
+                    currentMedia.play();
+                }
             }
         }
 
