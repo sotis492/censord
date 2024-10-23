@@ -105,13 +105,14 @@
                 scheduleNextSlide(); // ランダムな時間で次のスライドを設定
             } else if (mediaFiles[index].type === 'gif') {
                 slideVideo.src = mediaFiles[index].url;
-                slideVideo.loop = false; // GIFを動画のように一度だけ再生
+                slideVideo.loop = true; // GIFを動画のようにループ再生
                 slideVideo.style.display = 'block';
                 slideVideo.load();
                 slideVideo.play();
                 scheduleNextSlide(); // ランダムな時間で次のスライドを設定
             } else {
                 slideVideo.src = mediaFiles[index].url;
+                slideVideo.loop = true; // 動画をループ再生
                 slideVideo.style.display = 'block';
                 slideVideo.load();
                 slideVideo.play();
@@ -187,7 +188,18 @@
         // ランダムな切り替え時間を設定する
         function scheduleNextSlide() {
             const randomInterval = Math.floor(Math.random() * (15000 - 2000 + 1)) + 2000; // 2秒〜15秒
-            timeout = setTimeout(nextSlide, randomInterval);
+            const slideVideo = document.getElementById('slideVideo');
+            
+            // 動画がある場合はランダム時間までループ再生
+            if (mediaFiles[currentIndex].type === 'video' || mediaFiles[currentIndex].type === 'gif') {
+                slideVideo.loop = true; // ループ設定
+                timeout = setTimeout(() => {
+                    slideVideo.loop = false; // ループ停止
+                    nextSlide();
+                }, randomInterval);
+            } else {
+                timeout = setTimeout(nextSlide, randomInterval);
+            }
         }
     </script>
 </body>
